@@ -1,0 +1,185 @@
+<!doctype html>
+<html>
+  <head>
+	<meta name="viewport" content= "width=device-width, initial-scale=1.0" http-equiv="content-type" content="text/html" charset="UTF-8" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.4.3/css/ol.css" type="text/css">
+	
+	<link rel="stylesheet" type="text/css" href="jquery/jquery-ui-1.12.1.css">
+	<link rel="stylesheet" type="text/css" href="jquery/miniColors/jquery.minicolors.css">
+		
+    <style>
+      .map {
+        height: 600px;
+        width: 600px;
+		float: left;
+      }
+	  .TR3 {
+        height: 600px;
+        width: 600px;
+		float:left;
+      }
+	  .tools{
+		font: 0.7em verdana;
+	  }
+    </style>
+	
+	<script type="text/javascript" src="jquery/jquery-3.4.1.min.js"></script>
+	<script type="text/javascript" src="jquery/jquery-ui.min.js"></script>
+
+	<script type="text/javascript" src="jquery/miniColors/jquery.minicolors.min.js"></script>
+	
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.4.3/build/ol.js"></script>
+	<script type="text/javascript" src="TR3-min/unic.js"></script>
+	<script type="text/javascript" src="proj4js/proj4.js"></script>
+	<script type="text/javascript" src="proj4js/25830.js"></script>
+    <title>OpenLayers example</title>
+  </head>
+  <body>
+    <h2>My Map</h2>
+    <div id="map" class="map"></div>
+	<div id="TR3" class="TR3"></div>
+	<div id="tools" class="tools" ></div>
+	<div id="progress" class="progress" title="Herramientas" ></div>
+    <script type="text/javascript">
+		ol.proj.proj4.register(proj4);//ol v5.0.0
+		
+		var projection = ol.proj.get("EPSG:25830");
+		projection.setExtent([ -1500000, 3000000, 2000000, 5000000]);
+		
+		var osmLayer =  new ol.layer.Tile({
+			source: new ol.source.OSM({crossOrigin: 'anonymous'})
+		})
+		var map = new ol.Map({
+			target: 'map',
+			layers: [
+				osmLayer
+			],
+			view: new ol.View({
+				center: [440000, 4440000],
+				//maxZomm: 12,
+				zoom: 6,
+				projection: projection
+				})
+		});
+		TR3.setLoader( 'TR3-min/' );
+		document.getElementById('tools').innerHTML = TR3.setPanel();
+		$( "#tools" ).dialog({position: { my: "right top", at: "right top", of: window },width: 215});
+
+function setTR3() {
+
+	var bbox = map.getView().calculateExtent(map.getSize());
+	var code = map.getView().getProjection().getCode();
+
+			
+	var desty = document.getElementById('TR3');
+	var ori = document.getElementsByTagName('CANVAS')[0];
+			
+	/*var oriCtx = ori.getContext("2d");
+	//draw a red box
+	oriCtx.fillStyle="#FF0000";
+	oriCtx.fillRect(100,100,300,300);
+	var img = new Image;
+	img.src = ori.toDataURL();*/
+		
+	TR3.setStart(ori, desty, bbox, code, bbox);
+}
+
+map.on('moveend', setTR3);
+
+// https://openlayers.org/en/latest/examples/tile-load-events.html
+/**
+ * Renders a progress bar.
+ * @param {HTMLElement} el The target element.
+ * @constructor
+ */
+function Progress(el) {
+  this.el = el;
+  this.loading = 0;
+  this.loaded = 0;
+}
+
+/**
+ * Increment the count of loading tiles.
+ */
+Progress.prototype.addLoading = function () {
+  if (this.loading === 0) {
+    this.show();
+  }
+  ++this.loading;
+  this.update();
+};
+
+/**
+ * Increment the count of loaded tiles.
+ */
+Progress.prototype.addLoaded = function () {
+  var this_ = this;
+  setTimeout(function () {
+    ++this_.loaded;
+    this_.update();
+  }, 100);
+};
+
+/**
+ * Update the progress bar.
+ */
+Progress.prototype.update = function () {
+  var width = ((this.loaded / this.loading) * 100).toFixed(1) + '%';
+  this.el.style.width = width;
+  if (this.loading === this.loaded) {
+    this.loading = 0;
+    this.loaded = 0;
+    var this_ = this;
+    setTimeout(function () {
+      this_.hide();
+    }, 500);
+  }
+};
+
+/**
+ * Show the progress bar.
+ */
+Progress.prototype.show = function () {
+  this.el.style.visibility = 'visible';
+};
+
+/**
+ * Hide the progress bar.
+ */
+Progress.prototype.hide = function () {
+  if (this.loading === this.loaded) {
+    this.el.style.visibility = 'hidden';
+    this.el.style.width = 0;
+  }
+};
+
+/**
+ * Update the progress bar.
+ */
+Progress.prototype.update = function () {
+  var width = ((this.loaded / this.loading) * 100).toFixed(1) + '%';
+  this.el.style.width = width;
+  if (this.loading === this.loaded) {
+    this.loading = 0;
+    this.loaded = 0;
+    var this_ = this;
+    setTimeout(function () {
+      setTR3();
+    }, 500);
+  }
+};
+
+var progress = new Progress(document.getElementById('progress'));
+osmLayer.getSource().on('tileloadstart', function () {
+  progress.addLoading();
+});
+
+osmLayer.getSource().on('tileloadend', function () {
+  progress.addLoaded();
+});
+osmLayer.getSource().on('tileloaderror', function () {
+  progress.addLoaded();
+});
+    </script>
+  </body>
+</html>
