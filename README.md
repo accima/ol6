@@ -1,4 +1,7 @@
 # ol6
-integraciòn sencilla TR3 con openlayers 6
+Integraciòn sencilla TR3 con openlayers 6
 
-http://dev.terre3.es/ol6/
+## Demo en vivo
+http://terre3.es/dev/example/ol6/
+
+## Documentación
